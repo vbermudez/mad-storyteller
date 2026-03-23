@@ -294,7 +294,6 @@ function disposeAudioPlayback(playback: AudioPlayback | null) {
   element.onerror = null
   element.pause()
   element.removeAttribute('src')
-  element.load()
 
   URL.revokeObjectURL(objectUrl)
 }
@@ -549,6 +548,34 @@ function App() {
         console.error('[TTS] Audio playback error:', { errorCode, errorMsg, error: audio.error })
         finishPlayback('The voice sigil cracked; try again')
       }
+
+      await new Promise<void>((resolve, reject) => {
+        const onLoadStart = () => {
+          console.log('[TTS] Media load started')
+        }
+
+        const onCanPlay = () => {
+          console.log('[TTS] Media is ready to play')
+          audio.removeEventListener('canplay', onCanPlay)
+          audio.removeEventListener('error', onLoadError)
+          audio.removeEventListener('loadstart', onLoadStart)
+          resolve()
+        }
+
+        const onLoadError = () => {
+          const errorCode = audio.error?.code
+          const errorMsg = audio.error?.message
+          console.error('[TTS] Media load error before play:', { errorCode, errorMsg })
+          audio.removeEventListener('canplay', onCanPlay)
+          audio.removeEventListener('error', onLoadError)
+          audio.removeEventListener('loadstart', onLoadStart)
+          reject(audio.error)
+        }
+
+        audio.addEventListener('loadstart', onLoadStart)
+        audio.addEventListener('canplay', onCanPlay)
+        audio.addEventListener('error', onLoadError)
+      })
 
       await audio.play()
       setStatusText('ElevenLabs narration is speaking')
