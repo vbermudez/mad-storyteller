@@ -83,15 +83,17 @@ export async function handler(event) {
     }
 
     const audioBuffer = Buffer.from(await response.arrayBuffer())
+    const base64Audio = audioBuffer.toString('base64')
 
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'audio/mpeg',
+        'Content-Length': audioBuffer.length.toString(),
         'Cache-Control': 'no-store',
       },
       isBase64Encoded: true,
-      body: audioBuffer.toString('base64'),
+      body: base64Audio,
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown function error'

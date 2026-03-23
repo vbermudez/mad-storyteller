@@ -506,6 +506,12 @@ function App() {
         return
       }
 
+      console.log('[TTS] Blob received:', {
+        size: audioBlob.size,
+        type: audioBlob.type,
+        expected: 'audio/mpeg',
+      })
+
       const objectUrl = URL.createObjectURL(audioBlob)
       const audio = new Audio()
       const playback = {
@@ -533,10 +539,14 @@ function App() {
       setLoadingVoiceMessageId(null)
 
       audio.onended = () => {
+        console.log('[TTS] Playback ended normally')
         finishPlayback('The echo sinks back into the deep')
       }
 
       audio.onerror = () => {
+        const errorCode = audio.error?.code
+        const errorMsg = audio.error?.message
+        console.error('[TTS] Audio playback error:', { errorCode, errorMsg, error: audio.error })
         finishPlayback('The voice sigil cracked; try again')
       }
 
