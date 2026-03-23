@@ -26,14 +26,14 @@ npm install
 1. Add environment variables (see `.env.example`):
 
 - `OPENAI_API_KEY`
-- `OPENAI_MODEL` (optional)
-- `OPENAI_IMAGE_MODEL` (optional)
+- `OPENAI_MODEL` 
+- `OPENAI_IMAGE_MODEL`
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY` (recommended for server-side persistence)
 - `SUPABASE_ANON_KEY` (optional fallback if service role key is not provided)
 - `ELEVENLABS_API_KEY`
 - `ELEVENLABS_VOICE_ID`
-- `ELEVENLABS_MODEL_ID` (optional)
+- `ELEVENLABS_MODEL_ID`
 
 1. Create the Supabase table used by `/api/tales`:
 

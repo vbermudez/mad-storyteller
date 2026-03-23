@@ -1,4 +1,3 @@
-const DEFAULT_IMAGE_MODEL = 'gpt-image-1-mini'
 const MAX_TITLE_LENGTH = 180
 const MAX_SEED_LENGTH = 1200
 
@@ -63,7 +62,7 @@ export async function handler(event) {
   }
 
   const openAiApiKey = process.env.OPENAI_API_KEY
-  const imageModel = process.env.OPENAI_IMAGE_MODEL || DEFAULT_IMAGE_MODEL
+  const imageModel = process.env.OPENAI_IMAGE_MODEL
 
   if (!openAiApiKey) {
     return jsonResponse(500, {
