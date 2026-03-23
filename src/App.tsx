@@ -49,6 +49,11 @@ interface PortraitJobStatusResponse {
   error?: string
 }
 
+interface AudioPlayback {
+  element: HTMLAudioElement
+  objectUrl: string
+}
+
 const STORAGE_KEY = 'mad-storyteller:tales:v1'
 const DEFAULT_TALE_TITLE = 'Unwritten Chronicle'
 const TALES_SYNC_DEBOUNCE_MS = 900
@@ -278,6 +283,22 @@ function loadInitialTales(): Tale[] {
 
 const initialTales = loadInitialTales()
 
+function disposeAudioPlayback(playback: AudioPlayback | null) {
+  if (!playback) {
+    return
+  }
+
+  const { element, objectUrl } = playback
+
+  element.onended = null
+  element.onerror = null
+  element.pause()
+  element.removeAttribute('src')
+  element.load()
+
+  URL.revokeObjectURL(objectUrl)
+}
+
 function App() {
   const [tales, setTales] = useState<Tale[]>(initialTales)
   const [activeTaleId, setActiveTaleId] = useState<string>(initialTales[0]?.id ?? '')
@@ -289,7 +310,8 @@ function App() {
   const [loadingVoiceMessageId, setLoadingVoiceMessageId] = useState<string | null>(null)
   const [generatingPortraitMessageId, setGeneratingPortraitMessageId] = useState<string | null>(null)
   const chatEndRef = useRef<HTMLDivElement | null>(null)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const audioRef = useRef<AudioPlayback | null>(null)
+  const audioRequestRef = useRef(0)
   const lastSyncErrorRef = useRef('')
 
   const orderedTales = useMemo(
@@ -402,34 +424,23 @@ function App() {
 
   useEffect(() => {
     return () => {
-      const activeAudio = audioRef.current
-      if (!activeAudio) {
-        return
-      }
-
-      activeAudio.pause()
-      if (activeAudio.src.startsWith('blob:')) {
-        URL.revokeObjectURL(activeAudio.src)
-      }
-
+      disposeAudioPlayback(audioRef.current)
       audioRef.current = null
     }
   }, [])
 
   function stopAudioPlayback() {
-    const activeAudio = audioRef.current
-    if (!activeAudio) {
+    audioRequestRef.current += 1
+
+    const activePlayback = audioRef.current
+    if (!activePlayback) {
       setPlayingMessageId(null)
       setLoadingVoiceMessageId(null)
       return
     }
 
-    activeAudio.pause()
-    if (activeAudio.src.startsWith('blob:')) {
-      URL.revokeObjectURL(activeAudio.src)
-    }
-
     audioRef.current = null
+    disposeAudioPlayback(activePlayback)
     setPlayingMessageId(null)
     setLoadingVoiceMessageId(null)
   }
@@ -471,6 +482,7 @@ function App() {
     }
 
     stopAudioPlayback()
+    const requestId = audioRequestRef.current
     setLoadingVoiceMessageId(message.id)
     setStatusText('Binding narration to a voice sigil...')
 
@@ -489,36 +501,52 @@ function App() {
       }
 
       const audioBlob = await response.blob()
-      const objectUrl = URL.createObjectURL(audioBlob)
-      const audio = new Audio(objectUrl)
 
-      audioRef.current = audio
+      if (audioRequestRef.current !== requestId) {
+        return
+      }
+
+      const objectUrl = URL.createObjectURL(audioBlob)
+      const audio = new Audio()
+      const playback = {
+        element: audio,
+        objectUrl,
+      } satisfies AudioPlayback
+
+      audio.preload = 'auto'
+      audio.src = objectUrl
+
+      const finishPlayback = (status: string) => {
+        if (audioRef.current?.element !== audio || audioRequestRef.current !== requestId) {
+          return
+        }
+
+        audioRef.current = null
+        disposeAudioPlayback(playback)
+        setPlayingMessageId(null)
+        setLoadingVoiceMessageId(null)
+        setStatusText(status)
+      }
+
+      audioRef.current = playback
       setPlayingMessageId(message.id)
       setLoadingVoiceMessageId(null)
 
       audio.onended = () => {
-        URL.revokeObjectURL(objectUrl)
-        if (audioRef.current === audio) {
-          audioRef.current = null
-        }
-
-        setPlayingMessageId(null)
-        setStatusText('The echo sinks back into the deep')
+        finishPlayback('The echo sinks back into the deep')
       }
 
       audio.onerror = () => {
-        URL.revokeObjectURL(objectUrl)
-        if (audioRef.current === audio) {
-          audioRef.current = null
-        }
-
-        setPlayingMessageId(null)
-        setStatusText('The voice sigil cracked; try again')
+        finishPlayback('The voice sigil cracked; try again')
       }
 
       await audio.play()
       setStatusText('ElevenLabs narration is speaking')
     } catch (error) {
+      if (audioRequestRef.current !== requestId) {
+        return
+      }
+
       const messageText = error instanceof Error ? error.message : 'Narration failed unexpectedly.'
       stopAudioPlayback()
       setStatusText(`Voice ritual failed: ${messageText}`)
