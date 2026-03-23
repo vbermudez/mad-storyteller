@@ -94,7 +94,7 @@ export async function handler(event) {
       return jsonResponse(400, { error: 'At least one user message is required.' })
     }
 
-    const model = process.env.OPENAI_MODEL || 'gpt-4.1-mini'
+    const model = process.env.OPENAI_MODEL
 
     const completionResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

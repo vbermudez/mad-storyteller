@@ -32,7 +32,7 @@ export async function handler(event) {
 
   const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY
   const elevenLabsVoiceId = process.env.ELEVENLABS_VOICE_ID
-  const elevenLabsModelId = process.env.ELEVENLABS_MODEL_ID || 'eleven_turbo_v2_5'
+  const elevenLabsModelId = process.env.ELEVENLABS_MODEL_ID
 
   if (!elevenLabsApiKey) {
     return jsonResponse(500, {

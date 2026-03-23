@@ -1,4 +1,3 @@
-const DEFAULT_IMAGE_MODEL = 'gpt-image-1-mini'
 const OPENAI_REQUEST_TIMEOUT_MS = 1000 * 60 * 8
 const SESSION_COOKIE_NAME = 'mad_storyteller_session'
 
@@ -220,7 +219,7 @@ export async function handler(event) {
   }
 
   const openAiApiKey = process.env.OPENAI_API_KEY
-  const imageModel = process.env.OPENAI_IMAGE_MODEL || DEFAULT_IMAGE_MODEL
+  const imageModel = process.env.OPENAI_IMAGE_MODEL
 
   if (!openAiApiKey) {
     return jsonResponse(500, {
