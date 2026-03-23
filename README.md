@@ -26,14 +26,14 @@ npm install
 1. Add environment variables (see `.env.example`):
 
 - `OPENAI_API_KEY`
-- `OPENAI_MODEL` (optional, defaults to `gpt-4.1-mini`)
-- `OPENAI_IMAGE_MODEL` (optional, defaults to `gpt-image-1`)
+- `OPENAI_MODEL` (optional)
+- `OPENAI_IMAGE_MODEL` (optional)
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY` (recommended for server-side persistence)
 - `SUPABASE_ANON_KEY` (optional fallback if service role key is not provided)
 - `ELEVENLABS_API_KEY`
 - `ELEVENLABS_VOICE_ID`
-- `ELEVENLABS_MODEL_ID` (optional, defaults to `eleven_turbo_v2_5`)
+- `ELEVENLABS_MODEL_ID` (optional)
 
 1. Create the Supabase table used by `/api/tales`:
 
